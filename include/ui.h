@@ -1,0 +1,21 @@
+#ifndef __UI_H__
+#define __UI_H__
+
+#include <Arduino.h>
+#include <M5Unified.h>
+#include <M5GFX.h>
+
+#include "power.h"
+#include "synctime.h"
+#include "mpdcli.h"
+#include "p1dongle.h"
+
+constexpr static uint32_t BG_COLOR = lgfx::color888(0, 51, 102);
+constexpr static uint32_t P1_BG_COLOR = lgfx::color888(92, 83, 122);
+
+void display_power_ui();
+void display_date_time_ui();
+void display_mpd_ui(MPD_Client* mpd_cli);
+void display_dongle_ui(const P1_DATA dongle_data);
+
+#endif
