@@ -17,7 +17,6 @@
 static SD_Config sd_card;
 static uint32_t seconds = 0;
 static uint32_t minutes = 0;
-static uint32_t hours = 0; 
 static m5::rtc_datetime_t now;
 static uint32_t screen_timer = 0;
 static bool sleeping = false;
@@ -103,12 +102,15 @@ void setup()
 
 }
 
+const uint32_t TICKS_SLEEP = 50; // 50 msec
+const uint32_t TICKS_PER_SEC = 1000 / TICKS_SLEEP;
+const uint32_t DISPLAY_TIME = 7 * TICKS_PER_SEC; // seconds display stays on after touch
 
 void loop()
 {
+    now = M5.Rtc.getDateTime();
     if (!sleeping) {
         M5.Display.setCursor(0, 64);
-        now = M5.Rtc.getDateTime();
         if (now.time.minutes != minutes) {
             display_power_ui();
             minutes = now.time.minutes;
@@ -120,28 +122,16 @@ void loop()
                 connect_wifi();
             }
         }
-        if (screen_timer++ == 300) {
+        if (screen_timer++ >= DISPLAY_TIME) { // 7 seconds (at 20 ticks per second)
             M5.Display.setBrightness(0);
-            MPD_Client mpd(mpd_pl);
-            if (mpd.is_playing()) {
                 WiFi.setSleep(true);
                 M5.Display.powerSaveOn();
                 screen_timer = 0;
                 sleeping = true;
-            } else {
-                // if not on external power and playing: shut off
-                auto bi = get_power();
-                if (bi.bat_current > 10) {
-                    WiFi.disconnect();
-                    M5.Power.powerOff();
-                }
-            }
         }
     } else {
-        // check every hour if not on external power and not playing
-        now = M5.Rtc.getDateTime();
-        if (now.time.hours != hours) {
-            hours = now.time.hours;
+        // check every 5 mins if not on external power and not playing
+         if ((now.time.hours % 10) == 0) {
             MPD_Client mpd(mpd_pl);
             if (!mpd.is_playing()) {
                 auto bi = get_power();
@@ -174,6 +164,6 @@ void loop()
 
         log_ram();
     }
-    vTaskDelay(20);
+    vTaskDelay(TICKS_SLEEP);
 }
  
