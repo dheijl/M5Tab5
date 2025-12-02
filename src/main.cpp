@@ -17,6 +17,7 @@
 static SD_Config sd_card;
 static uint32_t seconds = 0;
 static uint32_t minutes = 0;
+static uint32_t hours = 0; 
 static m5::rtc_datetime_t now;
 static uint32_t screen_timer = 0;
 static bool sleeping = false;
@@ -119,7 +120,7 @@ void loop()
                 connect_wifi();
             }
         }
-        if (screen_timer++ == 6000) {
+        if (screen_timer++ == 300) {
             M5.Display.setBrightness(0);
             MPD_Client mpd(mpd_pl);
             if (mpd.is_playing()) {
@@ -128,6 +129,21 @@ void loop()
                 screen_timer = 0;
                 sleeping = true;
             } else {
+                // if not on external power and playing: shut off
+                auto bi = get_power();
+                if (bi.bat_current > 10) {
+                    WiFi.disconnect();
+                    M5.Power.powerOff();
+                }
+            }
+        }
+    } else {
+        // check every hour if not on external power and not playing
+        now = M5.Rtc.getDateTime();
+        if (now.time.hours != hours) {
+            hours = now.time.hours;
+            MPD_Client mpd(mpd_pl);
+            if (!mpd.is_playing()) {
                 auto bi = get_power();
                 if (bi.bat_current > 10) {
                     WiFi.disconnect();
@@ -158,6 +174,6 @@ void loop()
 
         log_ram();
     }
-    vTaskDelay(1);
+    vTaskDelay(20);
 }
  
