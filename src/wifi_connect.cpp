@@ -2,6 +2,7 @@
 
 static NETWORK_CFG cfg;
 
+// wifi connection, with ui: 360,0 .. 720,32 
 void connect_wifi()
 {
     M5Canvas wifi_canvas(&M5.Display);

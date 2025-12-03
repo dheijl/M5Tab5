@@ -17,6 +17,7 @@
 static SD_Config sd_card;
 static uint32_t seconds = 0;
 static uint32_t minutes = 0;
+static uint32_t minutes_elapsed = 0;
 static m5::rtc_datetime_t now;
 static uint32_t screen_timer = 0;
 static bool sleeping = false;
@@ -114,6 +115,7 @@ void loop()
         if (now.time.minutes != minutes) {
             display_power_ui();
             minutes = now.time.minutes;
+            minutes_elapsed++;
         }
         if (now.time.seconds != seconds) {
             display_date_time_ui();
@@ -130,8 +132,13 @@ void loop()
                 sleeping = true;
         }
     } else {
+        if (now.time.minutes != minutes) {
+            minutes = now.time.minutes;
+            minutes_elapsed++;
+        }
         // check every 5 mins if not on external power and not playing
-         if ((now.time.hours % 10) == 0) {
+         if (minutes_elapsed == 5) {
+            minutes_elapsed = 0;
             MPD_Client mpd(mpd_pl);
             if (!mpd.is_playing()) {
                 auto bi = get_power();

@@ -1,6 +1,6 @@
 #include "ui.h"
 
-// power/charging
+// power/charging display 0,0 .. 360,32 (wifi ui is 360,0 .. 720,32)
 void display_power_ui() {
     auto bat_info = get_power();
     int32_t wf = (60 * bat_info.bat_level) / 100;
@@ -30,6 +30,7 @@ void display_power_ui() {
     pwr_canvas.deleteSprite(); // not really needed
 }
 
+// date-time display 0,32 .. 360,64
 void display_date_time_ui() {
     M5Canvas pwr_canvas(&M5.Display);
     pwr_canvas.setPsram(true);
@@ -54,6 +55,7 @@ void display_date_time_ui() {
 
 }
 
+// mpd ui: 360,32 .. 720,64 and 0,64 .. 720,364
 void display_mpd_ui(MPD_Client* mpd_cli) {
     // mpd status
     M5Canvas mpd_canvas(&M5.Display);
@@ -102,6 +104,8 @@ void display_mpd_ui(MPD_Client* mpd_cli) {
     pl_canvas.deleteSprite();
 }
 
+// P1 dongle ui text: 0,364 .. 720,764
+// P1 dongle graph  : 0,764 .. 720,1164
 void display_dongle_ui(const P1_DATA dongle_data)
 {
     M5Canvas p1_canvas(&M5.Display);
@@ -142,4 +146,25 @@ void display_dongle_ui(const P1_DATA dongle_data)
     p1_canvas.printf("m3 gas used: %.3f", dongle_data.gas_delivered);
     p1_canvas.pushSprite(0, 364);
     p1_canvas.deleteSprite();
+
+    M5Canvas ch_canvas(&M5.Display);
+    ch_canvas.setPsram(true);
+    ch_canvas.createSprite(720, 400);
+    ch_canvas.setFont(&fonts::Font4);
+    ch_canvas.setTextSize(1.2);
+    //pl_canvas.setFont(&fonts::FreeSans12pt7b);
+    ch_canvas.setTextDatum(top_left);
+    ch_canvas.setTextWrap(false, false);
+    ch_canvas.setBaseColor(CH_BG_COLOR);
+    ch_canvas.fillScreen(CH_BG_COLOR);
+
+    float total_KWh_in = dongle_data.energy_delivered_tariff1 + dongle_data.energy_delivered_tariff2;
+    float total_KWh_out = dongle_data.energy_returned_tariff1 + dongle_data.energy_returned_tariff2;
+    ch_canvas.setColor(BLUE);
+    int h_KWH_in = (int)trunc(16.5 / total_KWh_in);
+    log_d("KWh_in: %d", h_KWH_in);
+    ch_canvas.fillRect(5, 400, 25, h_KWH_in);
+
+    ch_canvas.pushSprite(0, 764);
+    ch_canvas.deleteSprite();
 }

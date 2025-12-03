@@ -12,6 +12,7 @@
 
 constexpr static uint32_t BG_COLOR = lgfx::color888(0, 51, 102);
 constexpr static uint32_t P1_BG_COLOR = lgfx::color888(92, 83, 122);
+constexpr static uint32_t CH_BG_COLOR = lgfx::color888(240, 182, 127);
 
 void display_power_ui();
 void display_date_time_ui();
