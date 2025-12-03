@@ -158,13 +158,40 @@ void display_dongle_ui(const P1_DATA dongle_data)
     ch_canvas.setBaseColor(CH_BG_COLOR);
     ch_canvas.fillScreen(CH_BG_COLOR);
 
-    float total_KWh_in = dongle_data.energy_delivered_tariff1 + dongle_data.energy_delivered_tariff2;
-    float total_KWh_out = dongle_data.energy_returned_tariff1 + dongle_data.energy_returned_tariff2;
+    float KWh_in = dongle_data.power_delivered;
+    float KWh_out = dongle_data.power_returned;
     ch_canvas.setColor(BLUE);
-    int h_KWH_in = (int)trunc(16.5 / total_KWh_in);
-    log_d("KWh_in: %d", h_KWH_in);
-    ch_canvas.fillRect(5, 400, 25, h_KWH_in);
-
+    float pix_per_kw = 400.0 / 15;
+    int32_t h_KWH_in = (int32_t)trunc(KWh_in * pix_per_kw);
+    ch_canvas.fillRect(5, 400 - h_KWH_in, 55, h_KWH_in);
+    ch_canvas.setColor(GREEN);
+    int32_t h_KWH_out = (int32_t)trunc(KWh_out * pix_per_kw);
+    ch_canvas.fillRect(75, 400 - h_KWH_out, 55, h_KWH_out);
+    float l1 = dongle_data.current_l1;
+    float l3 = dongle_data.current_l3;
+    ch_canvas.setColor(DARKGREY);
+    float pix_per_amp = 400.0 / 30.0;
+    int32_t h_l1 = (int32_t)trunc(l1 * pix_per_amp);
+    ch_canvas.fillRect(155, 400 - h_l1, 55, h_l1);
+    int32_t h_l3 = (int32_t)trunc(l3 * pix_per_amp);
+    ch_canvas.fillRect(225, 400 - h_l3, 55, h_l3);
     ch_canvas.pushSprite(0, 764);
     ch_canvas.deleteSprite();
+
+    M5Canvas lbl_canvas(&M5.Display);
+    lbl_canvas.setPsram(true);
+    lbl_canvas.createSprite(720, 116);
+    lbl_canvas.setFont(&fonts::Font4);
+    lbl_canvas.setTextSize(1.2);
+    lbl_canvas.setTextDatum(top_left);
+    lbl_canvas.setTextWrap(false, false);
+    lbl_canvas.setBaseColor(BLACK);
+    lbl_canvas.fillScreen(BLACK);
+    lbl_canvas.setTextColor(WHITE);
+    lbl_canvas.drawString("In", 5, 5);
+    lbl_canvas.drawString("Out", 75, 5);
+    lbl_canvas.drawString("L1", 155, 5);
+    lbl_canvas.drawString("L3", 225, 5);
+    lbl_canvas.pushSprite(0, 1164);
+    lbl_canvas.deleteSprite();
 }

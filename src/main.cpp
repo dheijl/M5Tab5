@@ -103,42 +103,49 @@ void setup()
 
 }
 
-const uint32_t TICKS_SLEEP = 50; // 50 msec
-const uint32_t TICKS_PER_SEC = 1000 / TICKS_SLEEP;
-const uint32_t DISPLAY_TIME = 7 * TICKS_PER_SEC; // seconds display stays on after touch
+const uint32_t DISPLAY_TIME = 7; // seconds display stays on after touch
 
 void loop()
 {
+    bool sec_elapsed = false;
+    bool min_elapsed = false;
+    bool five_min_elapsed = false;
     now = M5.Rtc.getDateTime();
+    if (now.time.seconds != seconds) {
+        sec_elapsed = true;
+        screen_timer++;
+        seconds = now.time.seconds;
+        if (now.time.minutes != minutes) {
+            minutes = now.time.minutes;
+            min_elapsed = true;
+            minutes_elapsed++;
+            if (minutes_elapsed == 5) {
+                five_min_elapsed = true;
+            }
+        }
+    }
     if (!sleeping) {
         M5.Display.setCursor(0, 64);
-        if (now.time.minutes != minutes) {
+        if (min_elapsed) {
             display_power_ui();
-            minutes = now.time.minutes;
-            minutes_elapsed++;
         }
-        if (now.time.seconds != seconds) {
+        if (sec_elapsed) {
             display_date_time_ui();
-            seconds = now.time.seconds;
             if (!WiFi.isConnected()) {
                 connect_wifi();
             }
         }
-        if (screen_timer++ >= DISPLAY_TIME) { // 7 seconds (at 20 ticks per second)
+        if (screen_timer >= DISPLAY_TIME) { // 7 seconds 
+            screen_timer = 0;
             M5.Display.setBrightness(0);
-                WiFi.setSleep(true);
-                M5.Display.powerSaveOn();
-                screen_timer = 0;
-                sleeping = true;
+            WiFi.setSleep(true);
+            M5.Display.powerSaveOn();
+            sleeping = true;
         }
     } else {
-        if (now.time.minutes != minutes) {
-            minutes = now.time.minutes;
-            minutes_elapsed++;
-        }
         // check every 5 mins if not on external power and not playing
-         if (minutes_elapsed == 5) {
-            minutes_elapsed = 0;
+         if (five_min_elapsed) {
+            WiFi.setSleep(false);
             MPD_Client mpd(mpd_pl);
             if (!mpd.is_playing()) {
                 auto bi = get_power();
@@ -146,6 +153,8 @@ void loop()
                     WiFi.disconnect();
                     M5.Power.powerOff();
                 }
+            } else {
+                WiFi.setSleep(true);
             }
         }
     }
@@ -168,9 +177,9 @@ void loop()
         if (p1_request(dongle_data)) {
             display_dongle_ui(dongle_data);
         }
-
+        WiFi.setSleep(true);
         log_ram();
     }
-    vTaskDelay(TICKS_SLEEP);
+    vTaskDelay(50);
 }
  
