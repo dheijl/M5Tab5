@@ -21,6 +21,7 @@ static uint32_t minutes_elapsed = 0;
 static m5::rtc_datetime_t now;
 static uint32_t screen_timer = 0;
 static bool sleeping = false;
+static bool five_min_elapsed = false;
 
 static MPD_PLAYER mpd_pl;
 static P1_DATA dongle_data;
@@ -109,7 +110,6 @@ void loop()
 {
     bool sec_elapsed = false;
     bool min_elapsed = false;
-    bool five_min_elapsed = false;
     now = M5.Rtc.getDateTime();
     if (now.time.seconds != seconds) {
         sec_elapsed = true;
@@ -125,6 +125,7 @@ void loop()
         }
     }
     if (!sleeping) {
+        five_min_elapsed = false;
         M5.Display.setCursor(0, 64);
         if (min_elapsed) {
             display_power_ui();
@@ -143,8 +144,9 @@ void loop()
             sleeping = true;
         }
     } else {
-        // check every 5 mins if not on external power and not playing
+        // check after 5 mins if not on external power and not playing
          if (five_min_elapsed) {
+            five_min_elapsed = false;
             WiFi.setSleep(false);
             MPD_Client mpd(mpd_pl);
             if (!mpd.is_playing()) {
@@ -163,7 +165,7 @@ void loop()
     if (touch.wasPressed()) {
         screen_timer = 0;
         sleeping = false;
-        display_power_ui();
+        display_power_ui(); // show before wifi and screen !!
         WiFi.setSleep(false);
         M5.Display.setBrightness(40);
         M5.Display.powerSaveOff();
