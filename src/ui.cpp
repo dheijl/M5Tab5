@@ -160,21 +160,25 @@ void display_dongle_ui(const P1_DATA dongle_data)
 
     float KWh_in = dongle_data.power_delivered;
     float KWh_out = dongle_data.power_returned;
-    ch_canvas.setColor(BLUE);
+    ch_canvas.setColor(KWH_COLOR);
     float pix_per_kw = 400.0 / 15;
-    int32_t h_KWH_in = (int32_t)trunc(KWh_in * pix_per_kw);
+    int32_t h_KWH_in = (int32_t)roundf(KWh_in * pix_per_kw);
     ch_canvas.fillRect(5, 400 - h_KWH_in, 55, h_KWH_in);
-    ch_canvas.setColor(GREEN);
-    int32_t h_KWH_out = (int32_t)trunc(KWh_out * pix_per_kw);
+    ch_canvas.setColor(SUN_COLOR);
+    int32_t h_KWH_out = (int32_t)roundf(KWh_out * pix_per_kw);
     ch_canvas.fillRect(75, 400 - h_KWH_out, 55, h_KWH_out);
     float l1 = dongle_data.current_l1;
     float l3 = dongle_data.current_l3;
-    ch_canvas.setColor(DARKGREY);
+    ch_canvas.setColor(LX_COLOR);
     float pix_per_amp = 400.0 / 30.0;
-    int32_t h_l1 = (int32_t)trunc(l1 * pix_per_amp);
+    int32_t h_l1 = (int32_t)roundf(l1 * pix_per_amp);
     ch_canvas.fillRect(155, 400 - h_l1, 55, h_l1);
-    int32_t h_l3 = (int32_t)trunc(l3 * pix_per_amp);
+    int32_t h_l3 = (int32_t)roundf(l3 * pix_per_amp);
     ch_canvas.fillRect(225, 400 - h_l3, 55, h_l3);
+    float peak = dongle_data.highest_peak_pwr;
+    ch_canvas.setColor(RED);
+    int32_t h_peak = (int32_t)roundf(peak * pix_per_kw);
+    ch_canvas.fillRect(305, 400 - h_peak, 55, h_peak);
     ch_canvas.pushSprite(0, 764);
     ch_canvas.deleteSprite();
 
@@ -192,6 +196,7 @@ void display_dongle_ui(const P1_DATA dongle_data)
     lbl_canvas.drawString("Out", 75, 5);
     lbl_canvas.drawString("L1", 155, 5);
     lbl_canvas.drawString("L3", 225, 5);
+    lbl_canvas.drawString("Peak", 305, 5);
     lbl_canvas.pushSprite(0, 1164);
     lbl_canvas.deleteSprite();
 }
