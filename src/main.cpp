@@ -121,11 +121,11 @@ void loop()
             minutes_elapsed++;
             if (minutes_elapsed == 5) {
                 five_min_elapsed = true;
+                minutes_elapsed = 0;
             }
         }
     }
     if (!sleeping) {
-        five_min_elapsed = false;
         M5.Display.setCursor(0, 64);
         if (min_elapsed) {
             display_power_ui();
@@ -143,27 +143,28 @@ void loop()
             M5.Display.powerSaveOn();
             sleeping = true;
         }
-    } else {
-        // check after 5 mins if not on external power and not playing
-         if (five_min_elapsed) {
-            five_min_elapsed = false;
-            WiFi.setSleep(false);
-            auto bi = get_power();
-            // battery low and not charging
-            if (bi.bat_level < 20 && !bi.is_charging) {
-                WiFi.disconnect();
-                M5.Power.powerOff();
-            }
-            MPD_Client mpd(mpd_pl);
-            // not playing and not on external power
-            if (!mpd.is_playing() && (bi.bat_current > 10)) {
-                WiFi.disconnect();
-                M5.Power.powerOff();
-            } else {
-                WiFi.setSleep(true);
-            }
+    } 
+    // check after 5 mins if not on external power and not playing
+    if (five_min_elapsed) {
+        five_min_elapsed = false;
+        WiFi.setSleep(false);
+        auto bi = get_power();
+        // battery low and not charging
+        if (bi.bat_level < 20 && !bi.is_charging) {
+            WiFi.disconnect();
+            M5.Power.powerOff();
+        }
+        MPD_Client mpd(mpd_pl);
+        // not playing and not on external power
+        if (!mpd.is_playing() && (bi.bat_current > 10)) {
+            WiFi.disconnect();
+            M5.Power.powerOff();
+        }
+        else {
+            WiFi.setSleep(true);
         }
     }
+    // check touch, sleeping or not    
     M5.update();
     auto touch = M5.Touch.getDetail();
     if (touch.wasPressed()) {
