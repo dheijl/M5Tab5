@@ -13,7 +13,7 @@ BatteryInfo get_power() {
         M5.Power.setBatteryCharge(true);
         bat_info.charging_enabled = true;
     }
-    else if (bat_info.bat_level >= 85) {
+    else if (bat_info.bat_level >= 90) {
         //log_d("disable battery charging");
         M5.Power.setBatteryCharge(false);
         bat_info.charging_enabled = false;
