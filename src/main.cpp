@@ -187,6 +187,6 @@ void loop()
         WiFi.setSleep(true);
         log_ram();
     }
-    vTaskDelay(50);
+    vTaskDelay(100);
 }
  

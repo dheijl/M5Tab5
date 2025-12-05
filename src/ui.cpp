@@ -157,24 +157,26 @@ void display_dongle_ui(const P1_DATA dongle_data)
     ch_canvas.setTextWrap(false, false);
     ch_canvas.setBaseColor(CH_BG_COLOR);
     ch_canvas.fillScreen(CH_BG_COLOR);
-
-    float KWh_in = dongle_data.power_delivered;
-    float KWh_out = dongle_data.power_returned;
-    ch_canvas.setColor(KWH_COLOR);
-    float pix_per_kw = 400.0 / 15;
-    int32_t h_KWH_in = (int32_t)roundf(KWh_in * pix_per_kw);
-    ch_canvas.fillRect(5, 400 - h_KWH_in, 55, h_KWH_in);
-    ch_canvas.setColor(SUN_COLOR);
-    int32_t h_KWH_out = (int32_t)roundf(KWh_out * pix_per_kw);
-    ch_canvas.fillRect(75, 400 - h_KWH_out, 55, h_KWH_out);
+    // amp l1 and l3 at 5 and 75  
     float l1 = dongle_data.current_l1;
     float l3 = dongle_data.current_l3;
     ch_canvas.setColor(LX_COLOR);
     float pix_per_amp = 400.0 / 30.0;
     int32_t h_l1 = (int32_t)roundf(l1 * pix_per_amp);
-    ch_canvas.fillRect(155, 400 - h_l1, 55, h_l1);
+    ch_canvas.fillRect(5, 400 - h_l1, 55, h_l1);
     int32_t h_l3 = (int32_t)roundf(l3 * pix_per_amp);
-    ch_canvas.fillRect(225, 400 - h_l3, 55, h_l3);
+    ch_canvas.fillRect(75, 400 - h_l3, 55, h_l3);
+    // KWh in and out at 155 and 225
+    float KWh_in = dongle_data.power_delivered;
+    float KWh_out = dongle_data.power_returned;
+    ch_canvas.setColor(KWH_COLOR);
+    float pix_per_kw = 400.0 / 15;
+    int32_t h_KWH_in = (int32_t)roundf(KWh_in * pix_per_kw);
+    ch_canvas.fillRect(155, 400 - h_KWH_in, 55, h_KWH_in);
+    ch_canvas.setColor(SUN_COLOR);
+    int32_t h_KWH_out = (int32_t)roundf(KWh_out * pix_per_kw);
+    ch_canvas.fillRect(225, 400 - h_KWH_out, 55, h_KWH_out);
+    // month peak at 305
     float peak = dongle_data.highest_peak_pwr;
     ch_canvas.setColor(RED);
     int32_t h_peak = (int32_t)roundf(peak * pix_per_kw);
@@ -192,10 +194,10 @@ void display_dongle_ui(const P1_DATA dongle_data)
     lbl_canvas.setBaseColor(BLACK);
     lbl_canvas.fillScreen(BLACK);
     lbl_canvas.setTextColor(WHITE);
-    lbl_canvas.drawString("In", 5, 5);
-    lbl_canvas.drawString("Out", 75, 5);
-    lbl_canvas.drawString("L1", 155, 5);
-    lbl_canvas.drawString("L3", 225, 5);
+    lbl_canvas.drawString("L1", 5, 5);
+    lbl_canvas.drawString("L3", 75, 5);
+    lbl_canvas.drawString("In", 155, 5);
+    lbl_canvas.drawString("Out", 225, 5);
     lbl_canvas.drawString("Peak", 305, 5);
     lbl_canvas.pushSprite(0, 1164);
     lbl_canvas.deleteSprite();
