@@ -15,13 +15,7 @@
 #include "p1dongle.h"
 
 static SD_Config sd_card;
-static uint32_t seconds = 0;
-static uint32_t minutes = 0;
-static uint32_t minutes_elapsed = 0;
 static m5::rtc_datetime_t now;
-static uint32_t screen_timer = 0;
-static bool sleeping = false;
-static bool five_min_elapsed = false;
 
 static MPD_PLAYER mpd_pl;
 static P1_DATA dongle_data;
@@ -104,51 +98,55 @@ void setup()
         display_dongle_ui(dongle_data);
     }
 
+    M5.Display.setCursor(0, 64);
+
 }
 
-const uint32_t DISPLAY_TIME = 7; // seconds display stays on after touch
+typedef struct time_counters {
+    uint32_t seconds;
+    uint32_t minutes;
+    uint32_t minutes_elapsed;
+    uint32_t display_timeout;
+} TIME_COUNTERS;
+
+typedef struct task_timers {
+    bool sec_elapsed;
+    bool min_elapsed;
+    bool five_min_elapsed;
+    bool screen_timer_elapsed;
+} TASK_TIMERS;
+
+static void UpdateTimers(TASK_TIMERS& tasktimers);
+static void UpdateDisplay(TASK_TIMERS& tasktimers);
+static void CheckTouch();
+static void CheckPowerOff(TASK_TIMERS& tasktimers);
+
+const uint32_t DISPLAY_TIME_SECS = 7; // seconds display stays on after touch
+static TIME_COUNTERS timecounters { 0, 0, 0, 0};
+static bool sleeping = false;
 
 void loop()
 {
-    bool sec_elapsed = false;
-    bool min_elapsed = false;
-    now = M5.Rtc.getDateTime();
-    if (now.time.seconds != seconds) {
-        sec_elapsed = true;
-        screen_timer++;
-        seconds = now.time.seconds;
-        if (now.time.minutes != minutes) {
-            minutes = now.time.minutes;
-            min_elapsed = true;
-            minutes_elapsed++;
-            if (minutes_elapsed == 5) {
-                five_min_elapsed = true;
-                minutes_elapsed = 0;
-            }
-        }
-    }
+    // update timers
+    TASK_TIMERS tasktimers {false, false, false, false};
+    UpdateTimers(tasktimers);
+    // if display is showing, update as needed
     if (!sleeping) {
-        M5.Display.setCursor(0, 64);
-        if (min_elapsed) {
-            display_power_ui();
-        }
-        if (sec_elapsed) {
-            display_date_time_ui();
-            if (!WiFi.isConnected()) {
-                connect_wifi();
-            }
-        }
-        if (screen_timer >= DISPLAY_TIME) { // 7 seconds 
-            screen_timer = 0;
-            M5.Display.setBrightness(0);
-            WiFi.setSleep(true);
-            M5.Display.powerSaveOn();
-            sleeping = true;
-        }
+        UpdateDisplay(tasktimers);
     } 
-    // check after 5 mins if not on external power and not playing
-    if (five_min_elapsed) {
-        five_min_elapsed = false;
+    // check touchscreen
+    CheckTouch();
+    // every 5 mins: check if on battery and not playing => poweroff
+    CheckPowerOff(tasktimers);
+    // and continue
+   vTaskDelay(100);
+}
+
+/// @brief CheckPowerOff: check every 5 minutes if poweroff desired
+/// @param tasktimers 
+static void CheckPowerOff(TASK_TIMERS& tasktimers)
+{
+    if (tasktimers.five_min_elapsed) {
         WiFi.setSleep(false);
         auto bi = get_power();
         // battery low and not charging
@@ -166,16 +164,22 @@ void loop()
             WiFi.setSleep(true);
         }
     }
-    // check touch, sleeping or not    
+}
+
+/// @brief check if touchscreen pressed
+static void CheckTouch()
+{
     M5.update();
     auto touch = M5.Touch.getDetail();
     if (touch.wasPressed()) {
-        screen_timer = 0;
+        timecounters.display_timeout = 0;
         sleeping = false;
-        display_power_ui(); // show before wifi and screen !!
+        // update power display (values without wifi and display)
+        display_power_ui();
+        // prepare WiFi and display 
         WiFi.setSleep(false);
-        M5.Display.setBrightness(40);
         M5.Display.powerSaveOff();
+        M5.Display.setBrightness(40);
         if (WiFi.status() != WL_CONNECTED) {
             connect_wifi();
         }
@@ -189,6 +193,46 @@ void loop()
         WiFi.setSleep(true);
         log_ram();
     }
-    vTaskDelay(100);
+}
+
+/// @brief the display is showing: update as necessary and go to sleep if timer expired
+/// @param tasktimers 
+static void UpdateDisplay(TASK_TIMERS& tasktimers)
+{
+    if (tasktimers.min_elapsed) {
+        display_power_ui();
+    }
+    if (tasktimers.sec_elapsed) {
+        display_date_time_ui();
+    }
+    if (tasktimers.screen_timer_elapsed) { // DISPLAY_TIME_SECS seconds 
+        tasktimers.screen_timer_elapsed = false;
+        M5.Display.setBrightness(0);
+        WiFi.setSleep(true);
+        M5.Display.powerSaveOn();
+        sleeping = true;
+    }
+}
+
+static void UpdateTimers(TASK_TIMERS& tasktimers)
+{
+    now = M5.Rtc.getDateTime();
+    if (now.time.seconds != timecounters.seconds) {
+        tasktimers.sec_elapsed = true;
+        if (timecounters.display_timeout++ >= DISPLAY_TIME_SECS) {
+            timecounters.display_timeout = 0;
+            tasktimers.screen_timer_elapsed = true;
+        }
+        timecounters.seconds = now.time.seconds;
+        if (now.time.minutes != timecounters.minutes) {
+            timecounters.minutes = now.time.minutes;
+            timecounters.minutes_elapsed++;
+            tasktimers.min_elapsed = true;
+            if (timecounters.minutes_elapsed == 5) {
+                timecounters.minutes_elapsed = 0;
+                tasktimers.five_min_elapsed = true;
+            }
+        }
+    }
 }
  
