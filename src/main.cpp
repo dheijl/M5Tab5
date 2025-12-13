@@ -102,51 +102,44 @@ void setup()
 
 }
 
-typedef struct time_counters {
-    uint32_t seconds;
-    uint32_t minutes;
-    uint32_t minutes_elapsed;
-    uint32_t display_timeout;
-} TIME_COUNTERS;
-
 typedef struct task_timers {
     bool sec_elapsed;
     bool min_elapsed;
     bool five_min_elapsed;
-    bool screen_timer_elapsed;
 } TASK_TIMERS;
 
-static void UpdateTimers(TASK_TIMERS& tasktimers);
-static void UpdateDisplay(TASK_TIMERS& tasktimers);
-static void CheckTouch();
-static void CheckPowerOff(TASK_TIMERS& tasktimers);
-
 const uint32_t DISPLAY_TIME_SECS = 7; // seconds display stays on after touch
-static TIME_COUNTERS timecounters { 0, 0, 0, 0};
-static bool sleeping = false;
+
+static void UpdateTimers(TASK_TIMERS& tasktimers);
+static bool CheckTouch();
+static bool UpdateDisplay(const TASK_TIMERS& tasktimers);
+static void CheckPowerOff();
 
 void loop()
 {
+    static bool sleeping = false;
+
+    TASK_TIMERS tasktimers{ false, false, false };
     // update timers
-    TASK_TIMERS tasktimers {false, false, false, false};
     UpdateTimers(tasktimers);
-    // if display is showing, update as needed
-    if (!sleeping) {
-        UpdateDisplay(tasktimers);
-    } 
     // check touchscreen
-    CheckTouch();
+    if (CheckTouch()) {
+        sleeping = false;
+    }
+    // if touched: update display while not sleeping
+    if (!sleeping) {
+        sleeping = UpdateDisplay(tasktimers);
+    }
     // every 5 mins: check if on battery and not playing => poweroff
-    CheckPowerOff(tasktimers);
+    if (tasktimers.five_min_elapsed) CheckPowerOff();
     // and continue
-   vTaskDelay(100);
+    vTaskDelay(100);
 }
 
 /// @brief CheckPowerOff: check every 5 minutes if poweroff desired
 /// @param tasktimers 
-static void CheckPowerOff(TASK_TIMERS& tasktimers)
+static void CheckPowerOff()
 {
-    if (tasktimers.five_min_elapsed) {
         WiFi.setSleep(false);
         auto bi = get_power();
         // battery low and not charging
@@ -163,17 +156,16 @@ static void CheckPowerOff(TASK_TIMERS& tasktimers)
         else {
             WiFi.setSleep(true);
         }
-    }
 }
 
 /// @brief check if touchscreen pressed
-static void CheckTouch()
+static bool CheckTouch()
 {
+    bool touched = false;
     M5.update();
     auto touch = M5.Touch.getDetail();
     if (touch.wasPressed()) {
-        timecounters.display_timeout = 0;
-        sleeping = false;
+        touched = true;
         // update power display (values without wifi and display)
         display_power_ui();
         // prepare WiFi and display 
@@ -193,45 +185,53 @@ static void CheckTouch()
         WiFi.setSleep(true);
         log_ram();
     }
+    return touched;
 }
 
 /// @brief the display is showing: update as necessary and go to sleep if timer expired
 /// @param tasktimers 
-static void UpdateDisplay(TASK_TIMERS& tasktimers)
+static bool UpdateDisplay(const TASK_TIMERS& tasktimers)
 {
+    static uint32_t display_timer = 0;
+
+    bool sleeping = false;
+    if (tasktimers.sec_elapsed) {
+        display_timer++;
+        display_date_time_ui();
+    }
     if (tasktimers.min_elapsed) {
         display_power_ui();
     }
-    if (tasktimers.sec_elapsed) {
-        display_date_time_ui();
-    }
-    if (tasktimers.screen_timer_elapsed) { // DISPLAY_TIME_SECS seconds 
-        tasktimers.screen_timer_elapsed = false;
+    if (display_timer >= DISPLAY_TIME_SECS) {  
         M5.Display.setBrightness(0);
         WiFi.setSleep(true);
         M5.Display.powerSaveOn();
         sleeping = true;
+        display_timer = 0;
     }
+    return sleeping;
 }
 
+/// @brief update the timers that say what to do
+/// @param tasktimers 
 static void UpdateTimers(TASK_TIMERS& tasktimers)
 {
+    static int8_t last_second = 0;
+    static int8_t last_minute = 0;
+    static uint32_t minutes_elapsed = 0;
+
     now = M5.Rtc.getDateTime();
-    if (now.time.seconds != timecounters.seconds) {
+    if (now.time.seconds != last_second) {
         tasktimers.sec_elapsed = true;
-        if (timecounters.display_timeout++ >= DISPLAY_TIME_SECS) {
-            timecounters.display_timeout = 0;
-            tasktimers.screen_timer_elapsed = true;
-        }
-        timecounters.seconds = now.time.seconds;
-        if (now.time.minutes != timecounters.minutes) {
-            timecounters.minutes = now.time.minutes;
-            timecounters.minutes_elapsed++;
-            tasktimers.min_elapsed = true;
-            if (timecounters.minutes_elapsed == 5) {
-                timecounters.minutes_elapsed = 0;
-                tasktimers.five_min_elapsed = true;
-            }
+        last_second = now.time.seconds;
+    }
+    if (now.time.minutes != last_minute) {
+        minutes_elapsed++;
+        last_minute = now.time.minutes;
+        tasktimers.min_elapsed = true;
+        if (minutes_elapsed == 5) {
+            minutes_elapsed = 0;
+            tasktimers.five_min_elapsed = true;
         }
     }
 }
