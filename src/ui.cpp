@@ -106,7 +106,7 @@ void display_mpd_ui(MPD_Client* mpd_cli) {
 
 // P1 dongle ui text: 0,364 .. 720,764
 // P1 dongle graph  : 0,764 .. 720,1164
-void display_dongle_ui(const P1_DATA dongle_data)
+void display_dongle_ui(const P1_DATA& dongle_data)
 {
     M5Canvas p1_canvas(&M5.Display);
     p1_canvas.setPsram(true);

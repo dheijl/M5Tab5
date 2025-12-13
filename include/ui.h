@@ -20,6 +20,6 @@ constexpr static uint32_t SUN_COLOR = lgfx::color888(138, 222, 173);
 void display_power_ui();
 void display_date_time_ui();
 void display_mpd_ui(MPD_Client* mpd_cli);
-void display_dongle_ui(const P1_DATA dongle_data);
+void display_dongle_ui(const P1_DATA& dongle_data);
 
 #endif
