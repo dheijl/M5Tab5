@@ -14,8 +14,6 @@ static void log_ram()
     log_d("Free PSRAM: %d", ESP.getFreePsram());
 }
 
-
-
 /// @brief CheckPowerOff: check every 5 minutes if poweroff desired
 /// @param tasktimers 
 void CheckPowerOff(void* params)
