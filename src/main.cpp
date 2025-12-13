@@ -44,7 +44,7 @@ void setup()
     M5.Display.setFont(&fonts::FreeMonoBold12pt7b);
     M5.Display.setTextScroll(true);
     M5.Display.waitDisplay();
-    M5.Display.setBrightness(40);
+    M5.Display.setBrightness(10);
 
     // display battery/power state on top line 
     display_power_ui();
@@ -120,12 +120,13 @@ void loop()
     static bool sleeping = false;
 
     TASK_TIMERS tasktimers{ false, false, false };
-    // update timers
-    UpdateTimers(tasktimers);
+
     // check touchscreen
     if (CheckTouch()) {
         sleeping = false;
     }
+    // update timers
+    UpdateTimers(tasktimers);
     // if touched: update display while not sleeping
     if (!sleeping) {
         sleeping = UpdateDisplay(tasktimers);
@@ -171,7 +172,7 @@ static bool CheckTouch()
         // prepare WiFi and display 
         WiFi.setSleep(false);
         M5.Display.powerSaveOff();
-        M5.Display.setBrightness(40);
+        M5.Display.setBrightness(10);
         if (WiFi.status() != WL_CONNECTED) {
             connect_wifi();
         }
@@ -183,7 +184,6 @@ static bool CheckTouch()
             display_dongle_ui(dongle_data);
         }
         WiFi.setSleep(true);
-        log_ram();
     }
     return touched;
 }
@@ -208,6 +208,7 @@ static bool UpdateDisplay(const TASK_TIMERS& tasktimers)
         M5.Display.powerSaveOn();
         sleeping = true;
         display_timer = 0;
+        log_ram();
     }
     return sleeping;
 }
