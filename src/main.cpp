@@ -141,13 +141,13 @@ void loop()
 /// @param tasktimers 
 static void CheckPowerOff()
 {
-        WiFi.setSleep(false);
         auto bi = get_power();
         // battery low and not charging
         if (bi.bat_level < 20 && !bi.is_charging) {
             WiFi.disconnect();
             M5.Power.powerOff();
         }
+        WiFi.setSleep(false);
         MPD_Client mpd(mpd_pl);
         // not playing and not on external power
         if (!mpd.is_playing() && (bi.bat_current > 10)) {
