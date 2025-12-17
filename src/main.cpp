@@ -118,7 +118,7 @@ void loop()
         sleeping = false;
         ShowData();
     }
-    // if touched: update time/power status while not sleeping
+    // if display showing: update time/power status
     if (!sleeping) {
         sleeping = UpdateStatus(tasktimers);
     }
@@ -196,8 +196,8 @@ static bool UpdateStatus(const TASK_TIMERS& tasktimers)
     }
     if (tasktimers.display_timer_elapsed) {
         M5.Display.setBrightness(0);
-        WiFi.setSleep(true);
         M5.Display.powerSaveOn();
+        WiFi.setSleep(true);
         log_ram();
         return true;
     }
