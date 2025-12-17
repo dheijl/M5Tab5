@@ -25,6 +25,7 @@ typedef struct task_timers {
     bool min_elapsed;
     bool five_min_elapsed;
     bool display_timer_elapsed;
+    bool need_timesync;
 } TASK_TIMERS;
 
 const uint32_t DISPLAY_TIME_SECS = 7; // seconds display stays on after touch
@@ -124,6 +125,10 @@ void loop()
     }
     // every 5 mins: check if on battery and not playing => poweroff
     if (tasktimers.five_min_elapsed) CheckPowerOff();
+    // once every day: SNTP time sync needed
+    if (tasktimers.need_timesync) {
+        check_time();
+    }
     // and continue
     vTaskDelay(100);
 }
@@ -150,6 +155,7 @@ static void CheckPowerOff()
 }
 
 /// @brief check if touchscreen pressed
+/// @returns bool
 static bool CheckTouch()
 {
     bool touched = false;
@@ -183,8 +189,8 @@ static void ShowData() {
 }
 
 /// @brief the display is showing: update as necessary and enter sleep mode if necessary
-/// @param tasktimers 
-/// @returns bool: enter sleep or not yet
+/// @param TASK_TIMERS 
+/// @returns bool: enter sleep or not(yet)
 static bool UpdateStatus(const TASK_TIMERS& tasktimers)
 {
 
@@ -205,15 +211,17 @@ static bool UpdateStatus(const TASK_TIMERS& tasktimers)
 }
 
 /// @brief update the timers that say what to do
-/// @param tasktimers 
+/// @param sleeping
+/// @returns TASK_TIMERS 
 static TASK_TIMERS UpdateTimers(bool sleeping)
 {
     static int8_t last_second = 0;
     static int8_t last_minute = 0;
+    static int8_t last_day = 0;
     static uint32_t minutes_elapsed = 0;
     static uint32_t display_timer = 0;
 
-    TASK_TIMERS tasktimers = { false, false, false, false };
+    TASK_TIMERS tasktimers = { false, false, false, false, false };
 
     now = M5.Rtc.getDateTime();
     if (now.time.seconds != last_second) {
@@ -235,6 +243,10 @@ static TASK_TIMERS UpdateTimers(bool sleeping)
             minutes_elapsed = 0;
             tasktimers.five_min_elapsed = true;
         }
+    }
+    if (now.date.date != last_day) {
+        tasktimers.need_timesync = true;
+        last_day = now.date.date;
     }
     return tasktimers;
 }
