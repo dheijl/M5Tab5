@@ -25,9 +25,10 @@ void connect_wifi()
         log_d("NVS wifi config: %s %s", cfg.ssid, cfg.psw);
     }
     // STA MODE
+    WiFi.disconnect(false, false, 1UL);
     WiFi.setSleep(false);
     WiFi.mode(WIFI_STA);
-    WiFi.disconnect();
+    WiFi.setAutoReconnect(true);
     WiFi.begin(cfg.ssid, cfg.psw);
     // Wait for connection
     uint32_t i = 0;
