@@ -8,7 +8,7 @@ BatteryInfo get_power() {
     // M5.Power.setChargeCurrent(500); // not implemented on TAB5
     bat_info.bat_level = M5.Power.getBatteryLevel();
     bat_info.bat_current = M5.Power.getBatteryCurrent();
-    if (bat_info.bat_level <= 70) {
+    if (bat_info.bat_level <= 50) {
         //log_d("enable battery charging");
         M5.Power.setBatteryCharge(true);
         bat_info.charging_enabled = true;
