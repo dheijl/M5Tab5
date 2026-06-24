@@ -15,7 +15,7 @@ bool p1_request(P1_DATA& dongle_data) {
     dongle.collectHeaders(keys, 1);
 
     // Send request
-    dongle.begin(transport, "http://nrg-dongle-pro.local/api/v2/sm/actual");
+    dongle.begin(transport, "http://nrg-dongle-pro.local/api/v2/sm/fields");
     dongle.GET();
 
     // Get the raw and the decoded stream
