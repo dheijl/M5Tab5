@@ -32,22 +32,9 @@ static constexpr uint8_t ST7123_ADDR = 0x55;     // ST7123/ST7121 touch I2C addr
 
 // Configure PI4IOE5V6408 expander to keep touch controller out of reset during sleep
 void keepTouchOutOfReset() {
-    TwoWire& exp_i2c = M5.In_I2C; // Use M5Unified's pre-configured internal I2C bus
-    // Set TP_RST pin as output
-    exp_i2c.beginTransmission(IO_EXP_ADDR);
-    exp_i2c.write(0x03); // Direction register
-    exp_i2c.write(~(1 << TP_RST_EXP_PIN) & 0xFF); // Pin 5 = output, all others input
-    exp_i2c.endTransmission();
-    // Set TP_RST HIGH (release reset)
-    exp_i2c.beginTransmission(IO_EXP_ADDR);
-    exp_i2c.write(0x05); // Output state register
-    exp_i2c.write(1 << TP_RST_EXP_PIN);
-    exp_i2c.endTransmission();
-    // Disable pull resistors on TP_RST
-    exp_i2c.beginTransmission(IO_EXP_ADDR);
-    exp_i2c.write(0x0B); // Pull disable register
-    exp_i2c.write(1 << TP_RST_EXP_PIN);
-    exp_i2c.endTransmission();
+    M5.In_I2C.writeRegister8(IO_EXP_ADDR, 0x03, ~(1 << TP_RST_EXP_PIN) & 0xFF, 400000); // Direction register: pin 5 = output
+    M5.In_I2C.writeRegister8(IO_EXP_ADDR, 0x05, 1 << TP_RST_EXP_PIN, 400000);            // Output state: TP_RST HIGH
+    M5.In_I2C.writeRegister8(IO_EXP_ADDR, 0x0B, 1 << TP_RST_EXP_PIN, 400000);            // Pull disable register
 }
 
 // Put touch controller into low-power mode that asserts INT on touch
@@ -98,7 +85,7 @@ void lightSleepTouchWake(uint64_t sleep_us = 0) {
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
 
     M5.Display.wakeup();
-    M5.Touch.begin(); // Re-initialize touch after low-power mode
+    M5.Touch.begin(&M5.Display); // Re-initialize touch after low-power mode
     M5.Display.setBrightness(200); // Restore your default brightness
 }
 
