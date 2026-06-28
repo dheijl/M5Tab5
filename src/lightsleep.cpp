@@ -17,6 +17,8 @@ M5.Power.timerSleep(wakeTime) with the on-board RX8130CE external RTC for ultra-
 BMI270 IMU motion interrupt wakeup (officially supported for Tab5 light/deep sleep)
 */
 
+/* it still fails */
+
 
 #include <M5Unified.h>
 #include <esp_sleep.h>
