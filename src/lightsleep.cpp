@@ -66,7 +66,7 @@ void loop() {
   // Code after wake runs here, M5Unified automatically reinitializes hardware
   }
 }
-Copy Code
+
 2. Touch wake with elevated sleep current(no hardware mod, tradeoff required)
 If you absolutely must have capacitive touch wake, you cannot use the default M5.Power.lightSleep() helper
 (it triggers PMU power gating for the touch rail).You will need to :
@@ -74,7 +74,7 @@ If you absolutely must have capacitive touch wake, you cannot use the default M5
 Send raw I2C commands to the PMS150G PMU to force the touch / peripheral 3.3V rail to stay enabled
 Bypass M5Unified power helpers and manually enter shallow ESP - IDF light sleep with all peripherals powered
 This will technically work for touch wake, but expect 5–12mA sleep current(vs < 0.5mA with IMU / RTC wake)
-ecause the touch controller, display logic, and related peripherals remain fully powered.
+because the touch controller, display logic, and related peripherals remain fully powered.
 his is not a true low - power mode for this board.
 
 For context : this is a deliberate design choice, not a hardware defect—Tab5 was built as an
