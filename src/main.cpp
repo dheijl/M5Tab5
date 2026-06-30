@@ -61,12 +61,13 @@ void setup()
     // check battery low
     M5.Display.setCursor(0, 64);
     auto bat_info = get_power();
-    if ((bat_info.bat_level < 20) && !(bat_info.ext_power | bat_info.is_charging)) {
-        M5.Display.println("Battery low - please connect external power.");
-        vTaskDelay(2000);
-        M5.Power.powerOff();
+    if (bat_info.bat_current + bat_info.bat_level != 0) {
+        if ((bat_info.bat_level < 20) && !(bat_info.ext_power | bat_info.is_charging)) {
+            M5.Display.println("Battery low - please connect external power.");
+            vTaskDelay(2000);
+            M5.Power.powerOff();
+        }
     }
-
     // initialize NVS network config from SD if SD present
     NETWORK_CFG nw_cfg;
     if (SD_Config::read_wifi(nw_cfg)) {

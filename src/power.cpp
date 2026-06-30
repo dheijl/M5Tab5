@@ -5,7 +5,7 @@
 
 BatteryInfo get_power() {
     BatteryInfo bat_info = { 0, 0, false, false, false };
-    if (M5.Power.getBatteryVoltage() <= 5) {
+    if (M5.Power.getBatteryCurrent() <= 50) {
         return bat_info;
     }
     // M5.Power.setChargeCurrent(500); // not implemented on TAB5
