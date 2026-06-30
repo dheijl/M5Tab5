@@ -4,10 +4,11 @@
 #include "power.h"
 
 BatteryInfo get_power() {
-    BatteryInfo bat_info = { 0, 0, false, false, false };
-    if (M5.Power.getBatteryCurrent() <= 50) {
+    BatteryInfo bat_info = { false, 0, 0, false, false, false };
+    if (M5.Power.getBatteryVoltage() <= 5) {
         return bat_info;
     }
+    bat_info.bat_present = true;
     // M5.Power.setChargeCurrent(500); // not implemented on TAB5
     bat_info.bat_level = M5.Power.getBatteryLevel();
     bat_info.bat_current = M5.Power.getBatteryCurrent();

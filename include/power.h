@@ -2,6 +2,7 @@
 
 #ifndef __POWER__H__
 typedef struct {
+    bool bat_present;
     int32_t bat_level;
     int32_t bat_current;
     bool ext_power;

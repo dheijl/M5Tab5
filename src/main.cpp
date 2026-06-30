@@ -61,7 +61,7 @@ void setup()
     // check battery low
     M5.Display.setCursor(0, 64);
     auto bat_info = get_power();
-    if (bat_info.bat_current + bat_info.bat_level != 0) {
+    if (bat_info.bat_present) {
         if ((bat_info.bat_level < 20) && !(bat_info.ext_power | bat_info.is_charging)) {
             M5.Display.println("Battery low - please connect external power.");
             vTaskDelay(2000);
@@ -138,7 +138,7 @@ void loop()
 static void CheckPowerOff()
 {
     auto bi = get_power();
-    if (bi.bat_level == 0 && bi.bat_current == 0) {
+    if (!bi.bat_present) {
         return;
     }
     // battery low and not charging

@@ -4,7 +4,7 @@
 void display_power_ui() {
     auto bat_info = get_power();
     int32_t we, wf = 0;
-    if (bat_info.bat_current > 0 || bat_info.bat_level > 0) {
+    if (bat_info.bat_present) {
         wf = (60 * bat_info.bat_level) / 100;
         we = 60 - wf;
     }
@@ -16,9 +16,12 @@ void display_power_ui() {
     pwr_canvas.setTextColor(WHITE);
     // battery icon
     int bat_color = bat_info.bat_level >= 40 ? GREEN : RED;
-    if (wf + we > 0) {
+    if (bat_info.bat_present) {
         pwr_canvas.fillRoundRect(2, 2, wf, 26, 4, bat_color);
         pwr_canvas.fillRoundRect(wf + 1, 2, we - 1, 26, 4, WHITE);
+    }
+    else {
+        pwr_canvas.fillRoundRect(2, 2, 60, 26, 4, BLUE);
     }
     // battery level
     pwr_canvas.drawString(std::to_string(bat_info.bat_level).c_str(), 80, 4);
