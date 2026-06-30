@@ -28,7 +28,7 @@ typedef struct task_timers {
     bool need_timesync;
 } TASK_TIMERS;
 
-const uint32_t DISPLAY_TIME_SECS = 7; // seconds display stays on after touch
+const uint32_t DISPLAY_TIME_SECS = 20; // seconds display stays on after touch
 
 static TASK_TIMERS UpdateTimers(bool sleeping);
 static bool CheckTouch();
@@ -137,6 +137,9 @@ void loop()
 static void CheckPowerOff()
 {
     auto bi = get_power();
+    if (bi.bat_level == 0 && bi.bat_current == 0) {
+        return;
+    }
     // battery low and not charging
     if (bi.bat_level < 20 && !bi.is_charging) {
         WiFi.disconnect();

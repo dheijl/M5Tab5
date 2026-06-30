@@ -3,8 +3,11 @@
 // power/charging display 0,0 .. 360,32 (wifi ui is 360,0 .. 720,32)
 void display_power_ui() {
     auto bat_info = get_power();
-    int32_t wf = (60 * bat_info.bat_level) / 100;
-    int32_t we = 60 - wf;
+    int32_t we, wf = 0;
+    if (bat_info.bat_current > 0 || bat_info.bat_level > 0) {
+        wf = (60 * bat_info.bat_level) / 100;
+        we = 60 - wf;
+    }
     M5Canvas pwr_canvas(&M5.Display);
     pwr_canvas.setPsram(true);
     pwr_canvas.createSprite(360, 32);
@@ -13,8 +16,10 @@ void display_power_ui() {
     pwr_canvas.setTextColor(WHITE);
     // battery icon
     int bat_color = bat_info.bat_level >= 40 ? GREEN : RED;
-    pwr_canvas.fillRoundRect(2, 2, wf, 26, 4, bat_color);
-    pwr_canvas.fillRoundRect(wf + 1, 2, we - 1, 26, 4, WHITE);
+    if (wf + we > 0) {
+        pwr_canvas.fillRoundRect(2, 2, wf, 26, 4, bat_color);
+        pwr_canvas.fillRoundRect(wf + 1, 2, we - 1, 26, 4, WHITE);
+    }
     // battery level
     pwr_canvas.drawString(std::to_string(bat_info.bat_level).c_str(), 80, 4);
     pwr_canvas.drawString("%", 110, 4);
