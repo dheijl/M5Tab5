@@ -3,9 +3,14 @@
 
 #include "power.h"
 
+// 2S LiPo: anything below 6V is either no battery or a dead one.
+// Without a battery the INA226 bus voltage floats a few mV above 0
+// (LSB = 1.25mV), so a near-zero threshold gives false "battery present".
+const int16_t MIN_BATTERY_MV = 6000;
+
 BatteryInfo get_power() {
     BatteryInfo bat_info = { false, 0, 0, false, false, false };
-    if (M5.Power.getBatteryVoltage() <= 5) {
+    if (M5.Power.getBatteryVoltage() < MIN_BATTERY_MV) {
         return bat_info;
     }
     bat_info.bat_present = true;
