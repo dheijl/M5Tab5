@@ -24,8 +24,10 @@ void display_power_ui() {
         pwr_canvas.fillRoundRect(2, 2, 60, 26, 4, BLUE);
     }
     // battery level
-    pwr_canvas.drawString(std::to_string(bat_info.bat_level).c_str(), 80, 4);
-    pwr_canvas.drawString("%", 110, 4);
+    // right-aligned so "100%" (4 x 14px mono chars) fits between the icon and the current
+    pwr_canvas.setTextDatum(top_right);
+    pwr_canvas.drawString((std::to_string(bat_info.bat_level) + "%").c_str(), 134, 4);
+    pwr_canvas.setTextDatum(top_left);
     // battery current
     pwr_canvas.setTextColor(bat_info.bat_current >= 0 ? WHITE : GREEN);
     pwr_canvas.drawString((std::to_string(bat_info.bat_current) + std::string(" mAh")).c_str(), 140, 4);
